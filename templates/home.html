@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <title>DS Project Main Page</title>
+    <link rel="stylesheet" type="text/css" href="static/css/stylesheet.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.28.0/themes/prism.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.28.0/prism.min.js"></script>
+</head>
+  <body>
+    <header>
+        <div>
+            <h1 class="logo">Unmasking Deceit</h1>
+            <div class="center-container">
+            <img src="static/images/social.jpg" alt="social media logos" class="center-image">
+            </div>
+        </div>
+    </header>
+    
+    <h2><strong>Machine Learning Approach to Detecting Fake News on Social Media</strong></h2>
+    
+      <p>It's hard to know if someone is trying to deceive you, especially on social media. There are millions of users across all social
+        media platforms sharing information every second of the day. Each one of those users has the ability to influence decisions or opinions. This 
+        could be for something as small as your dinner plans. or alternatively, they could share information that could result in a hostile 
+        takeover of a multi-billion dollar company. Information is so imparative throughout the decision making process that if you act upon inaccurate
+        data it could have implications that are felt worldwide.</p>
+
+      <p>It is almost impossible to know who is providing you with important facts or if it's fiction. We have all seen the news that when reading
+        the first few words you believe it must be click bait, or there is no way that information could be true. Through social media we get our 
+        information from other users that you follow and are given recommendations of new users or pages we should follow consistently. This is why
+        I have chosen to create a model that will detect if the posts being provided to the millions of users are real or fake.</p>
+
+    <div class="spacer"></div>
+    
+    <h3>PreProcecssing</h3>
+
+      <p>In order to create my model I used the following python libraries to first assist with the cleaning of the dataset.</p>
+      <ul>
+        <li>Numpy</li>
+        <li>Pandas</li>
+        <li>Natural Language Toolkit (ntlk)</li>
+        <li>Regular Expression (re)</li>
+      </ul>
+      <p>I began my preprocessing with the removal of the punctuation in the dataset as there could potentially be a large number of characters
+        that would not add value to the model that we are working to create. Once that was completed I proceeded to tokenized the words which 
+        will allow me to extract the meaningful text to that will be used in the prediction process. Lastly, I lowered the case of all the characters 
+        in the text provided which allowed me to efficently remove the 'stopwords', which are common words in the english language that have 
+        high usage without any true value to a prediction model.</p>
+      
+        <pre><code class ="language-python">
+          def remove_punctuation(text):
+            punctuationfree="".join([i for i in text if i not in string.punctuation])
+            return punctuationfree
+          </code></pre>
+          <pre><code class ="language-python"></code>
+          def tokenize_words(text):
+              words = re.split(r'\W+',text)
+              return words
+          </code></pre>
+          <pre><code class ="language-python">
+          for tokenized_data in df['Tokenized_Words']:
+              filtered_data = [x for x in tokenized_data if x.lower() not in stop_words]
+                
+              lemma_words = []
+            
+              for w in filtered_data:
+                  word1 = wordnet_lemmatizer.lemmatize(w, pos = "n")
+                  word2 = wordnet_lemmatizer.lemmatize(word1, pos = "v")
+                word3 = wordnet_lemmatizer.lemmatize(word2, pos = ("a"))
+                lemma_words.append(word3)
+            lemma_word_list.append(lemma_words)
+              </code></pre>
+              <script src="https://cdn.jsdelivr.net/npm/prismjs@1.28.0/prism.min.js"></script>
+
+
+      <p>Once the preprocessing of the data has been completed we are left with data that can be used to help train our model. 
+      From the below examples you can see where common words <em>(stopwords)</em> have been removed and then the underlined words have been changed 
+      to the root word. This will ensure that regardless of the context of the words that they are assigned the appropriate weights in the model. </p>
+      <div class="spacer"></div>
+      <ul>
+        <li>Initial Input - <em>"Bellamy Young <u>Opens</u> <strong>Up About Being</strong> <u>Adopted</u>, <strong>Her</strong>
+        Real First Name <strong>How She</strong> Almost <u>Missed</u> <strong>Out on</strong> Scandal"</em></li>
+        <li>PreProcessed Data - <em>['bellamy', 'young', <u>'open'</u>, <u>'adopt'</u>, 'real', 'first', 'name', 'almost', 
+        <u>'miss'</u>, 'scandal']</em></li>
+      </ul>
+
+    <div class="spacer"></div>
+
+  <h3>Creation and Training of model</h3>
+
+      <p>In order to create my model I used the following python libraries for the creation of the model.</p>
+        <ul>
+          <li>Sklearn</li>
+          <li>TfidfVectorizer</li>
+          <li>CountVectorizer</li>
+          <li>KFold</li>
+          <li>Support Vector Machines</li>
+          <li>RandomForestClassifier</li>
+          <li>GradientBoosterClassifer</li>
+          <li>GridSearch</li>
+        </ul>
+
+      <p>I created models using both the TfidfVectorizer and CountVectorizer for my feature extraction to see which had preformed
+        better through the training and testing of the model. Both of these methods provide interpretable features that can illustrate 
+        the importance of different words in text. To improve the robustness of the model I decided to create an ensemble using 
+        SVM, RandomForestClassifier, and GradientBoosterClassifer to see which combination of these would create the best model.
+        When using an ensemble of these classifers togethers it helps capture different patterns, reduce overfitting and provide
+        a high predictive accuracy. Additionally, I have chosen to use GridSearch and KFold with cross validation as hyperparameter 
+        techniques for the model. While I do have a significant amount of data it seems to not be too computationally heavy when 
+        using GridSearch. Using this has also added the ability to find the optimal hyperparameters for the model taking out the guesswork. 
+      </p>
+
+        <pre><code class ="language-python">
+          kf = KFold(n_splits=5, shuffle=True, random_state=101)
+          
+          svm_model = SVC(class_weight='balanced', probability=True)
+          svm_param_grid = {
+              "C":[5,10,20],
+              "kernel":['linear']    
+          }
+          svm_grid_search = GridSearchCV(svm_model,param_grid=svm_param_grid, cv=kf, n_jobs=-1)
+          
+          svm_grid_search.fit(X_train_tfidf ,y_train)
+          svm_best_model = svm_grid_search.best_estimator_
+
+          svm_grid_search.fit(X_train_count,y_train)  
+          svm_best_model_count = svm_grid_search.best_estimator_
+
+
+          rf_model = RandomForestClassifier(class_weight='balanced')
+          rf_param_grid = {
+              "n_estimators":[10,25,50],
+              "max_depth":[None],
+              "min_samples_split":[2,5,10],
+              "min_samples_leaf":[1,2,4]
+          }
+          rf_grid_search = GridSearchCV(rf_model, param_grid=rf_param_grid, cv=kf, n_jobs=-1)
+          
+          rf_grid_search.fit(X_train_tfidf ,y_train)  
+          rf_best_model = rf_grid_search.best_estimator_
+
+          rf_grid_search.fit(X_train_count,y_train)
+          rf_best_model_count = rf_grid_search.best_estimator_
+
+
+          xg_param_grid = {
+            'n_estimators': [10, 20, 30],
+            'learning_rate': [0.01, 0.1, 0.2],
+            'max_depth': [3, 4, 5],
+            'min_samples_split': [2, 5, 10],
+            'min_samples_leaf': [1, 2, 4]
+          }
+
+          xg_model = GradientBoostingClassifier()
+          xg_grid_search = GridSearchCV(xg_model, param_grid=xg_param_grid, cv=kf, n_jobs=-1, verbose=2)
+
+          xg_grid_search.fit(X_train_tfidf,y_train)
+          xg_best_model_tfidf = xg_grid_search.best_estimator_
+        
+          xg_grid_search.fit(X_train_count,y_train) 
+          xg_best_model_count = xg_grid_search.best_estimator_
+
+          </code></pre>
+
+          <p>Below is the code for the emsemble of the models that were created. The example showing is specifically for the 
+            first ensemble of SVM and RandomForestClassifier.
+          </p>
+          <pre><code class ="language-python">
+            def create_ensemble(X):
+              svm_preds= svm_best_model.predict(X)
+              rf_preds= rf_best_model.predict(X)
+              ensemble_predictions= [1 if (svm_pred + rf_pred) >= 1 else 0 for svm_pred, rf_pred in zip(svm_preds, rf_preds)]
+              return ensemble_predictions
+
+            ensemble_training_pred = create_ensemble(X_train_tfidf)
+
+
+            
+
+          </code></pre>
+          <script src="https://cdn.jsdelivr.net/npm/prismjs@1.28.0/prism.min.js"></script>
+
+
+  <h3>Conclusion and Results</h3>
+        
+          <p>The training of the model is yeilding an overall accuracy of 99% which may be showing that the model is learning based on the data that it has been given to 
+            train with. When testing the model with the test data I see a drop in the precision, recall and accuracy of the model on predicting fake news. 
+            Given the results I decided to see how the model performed when I only being introduced to the svm and random forest algorithm separately to the data. 
+            This analysis showed that while some of the measures in the classification report did increase the ensemble did provide the best model overall. I was able to 
+            calculate the AUC ROC score of 72.5% on the testing data, meaning that th model is differentiating between the classes well.I believe that the imbalance in the classes is 
+            weighing in on the results of the model. With only 24% of the data in the dataset being classified as fake it is making
+            it diffcult for the model to become more robust with the fake classification. I had attempted to locate more data to supplement the data that I had to increase
+            the minority but was not successful in locating similar datasets. 
+          </p>     
+          <div class="spacer"></div>
+          <p>Classification Report for the ensemble is resulting in a precision of 74%, 50% recall and 60% f1-score for the prediction of the Fake classification. The Real
+            classification is presenting with a 86% precision, 95% recall and 90% f1-score. The overall model is performing with a 84% accuracy. 
+          </p>
+          <div class="image-container">
+          <img src="static/images/classification_graph.jpg" alt="classification_report" width="900" height="600" class = 'side-by-side' >
+          <img src="static/images/heatmap.jpg" alt="heatmap" width="900" height="600" class = 'side-by-side' >
+          </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.28.0/prism.min.js"></script>
+</body>
+</html>
